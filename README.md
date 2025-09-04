@@ -4,9 +4,7 @@ March 3, 2025 - June 13, 2025
 # PROJECT OVERVIEW:
 This project is an advanced Python-based application for detecting potential porphyry copper deposits using magnetic and gravity data. The system processes geophysical daatasets to extract key features, applies machine learning models for predicting and identifying anomalies associated with porphyry copper system. Copper Core AI is designed to improve the efficiency and accuracy of mineral exploration.
 
-# Demo Video:
 
-# Notion Page: [https://www.notion.so/orefox/Demo-Video-for-the-Project-20e05cef1f228037af06f01d51afc049?source=copy_link]
 
 
 # SET UP INSTRUCTIONS:
