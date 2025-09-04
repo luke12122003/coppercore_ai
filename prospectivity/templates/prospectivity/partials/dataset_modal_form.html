@@ -1,0 +1,62 @@
+
+    <form hx-post="{% url 'dataset_upload' project.id %}" hx-target="#dataset-list" hx-swap="innerHTML"
+        enctype="multipart/form-data" autocomplete="off">
+        {% csrf_token %}
+        <div class="row g-3">
+            <div class="col-md-6">
+                {% if form and form.dataset_names.errors %}
+                <div class="alert alert-warning py-2 mb-2" role="alert" style="font-size: 1rem">
+                    {{ form.dataset_names.errors.0 }}
+                </div>
+                {% endif %}
+                <label for="dataset_names" class="form-label fw-bold">Dataset Name <span
+                        class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="dataset_names" name="dataset_names" required />
+            </div>
+            <div class="col-md-6">
+                <label for="dataset_types" class="form-label fw-bold">Dataset Type</label>
+                <select class="form-select" id="dataset_types" name="dataset_types">
+                    <option value="Raster">Raster [.tif, .tiff]</option>
+                    <option value="Vector">Vector [.zip]</option>
+                </select>
+            </div>
+            <div class="col-md-12">
+                {% if form and form.file.errors %}
+                <div class="alert alert-warning py-2 mb-2" role="alert" style="font-size: 1rem">
+                    {% for error in form.file.errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <label for="file" class="form-label fw-bold">Upload Dataset <span class="text-danger">*</span></label>
+                <div class="custom-file-dark">
+                    <input class="form-control" type="file" id="file" name="file" required accept=".tif,.tiff,.zip" />
+                </div>
+            </div>
+            <div class="col-md-6">
+                <label for="crs" class="form-label fw-bold">Coordinate Reference System</label>
+                <select class="form-select" id="crs" name="crs">
+                    <option value="GCS">GCS</option>
+                    <option value="PCS">PCS</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="band_info" class="form-label fw-bold">Band Info</label>
+                <select class="form-select" id="band_info" name="band_info">
+                    <option value="RED">Red</option>
+                    <option value="GREEN">Green</option>
+                    <option value="BLUE">Blue</option>
+                </select>
+            </div>
+        </div>
+        <div class="modal-footer d-flex justify-content-end gap-2" style="
+        border-bottom-right-radius: 18px;
+        border-bottom-left-radius: 18px;
+        background: #f1f5f8e7;
+      ">
+            <button type="submit" class="btn btn-primary px-4">Submit</button>
+            <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">
+                Close
+            </button>
+        </div>
+    </form>

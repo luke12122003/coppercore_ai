@@ -1,0 +1,30 @@
+{% extends 'prospectivity/base.html' %}
+{% block title %}Upload Dataset - CopperCore AI{% endblock %}
+
+{% block content %}
+<h2>Upload Dataset</h2>
+<!-- <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#datasetModal">
+    Upload Dataset
+</button> -->
+
+<!-- Modal for Dataset Upload -->
+<div class="modal fade" id="datasetModal" tabindex="-1" aria-labelledby="datasetModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="datasetModalLabel">Upload Dataset</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" enctype="multipart/form-data" hx-post="{% url 'upload_dataset' project.id %}" hx-target="#dataset-list" hx-swap="innerHTML">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

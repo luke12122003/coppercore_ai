@@ -1,0 +1,21 @@
+
+{% load static %}
+<xaiArtifact artifact_id="08adacb4-a26d-42d4-94d5-bd838b89880b" artifact_version_id="bc2d4e10-05ba-4c41-9880-8210c1b1ec8f" title="prospectivity/menubar.html" contentType="text/html">
+    
+    <nav class="navbar navbar-expand-sm bg-dark navbar-dark custom-menubar">
+        <div class="container-fluid">
+            <img src="{% static 'prospectivity/images/copercore_ai_logo.png' %}" alt="Logo" width="55" height="45" class="d-inline-block align-text-top">
+            <a class="navbar-brand custom-brand" href="{% url 'project' %}">CopperCORE</a>
+            <ul class="navbar-nav me-auto custom-nav">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/project/' %}active{% endif %}" href="{% url 'project' %}">Projects</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/map/' %}active{% endif %}" href="{% url 'map' %}">Map</a>
+                </li>
+                <!-- <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/help/' %}active{% endif %}" href="{% url 'help' %}">Help</a>
+                </li> -->
+            </ul>
+        </div>
+    </nav>

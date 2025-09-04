@@ -1,0 +1,187 @@
+{% extends 'prospectivity/base.html' %}
+{% block title %}Project: {{ project.name }} - CopperCore AI{% endblock %}
+{% block content %}
+<h2 class="project-title text-center mb-4" style="font-size:2rem; font-weight:700;">{{ project.name }}</h2>
+
+<div class="row mb-5 justify-content-center">
+    <div class="col-md-3 mb-3">
+        <div class="info-card p-3 h-100">
+            <h5 class="mb-3">Project Details</h5>
+            <p><strong>Code:</strong> {{ project.project_code|default:"N/A" }}</p>
+            <p><strong>Target Minerals:</strong> {{ project.target_minerals|default:"N/A" }}</p>
+            <p><strong>Description:</strong> {{ project.description|default:"N/A" }}</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="info-card p-3 h-100">
+            <h5 class="mb-3">Location</h5>
+            <p><strong>Country:</strong> {{ project.country|default:"N/A" }}</p>
+            <p><strong>Region:</strong> {{ project.region|default:"N/A" }}</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="info-card p-3 h-100">
+            <h5 class="mb-3">Metadata</h5>
+            <p><strong>Created:</strong> {{ project.created_date|date:"Y-m-d" }}</p>
+            <p><strong>Updated:</strong> {{ project.updated_date|date:"Y-m-d" }}</p>
+            <p><strong>Updated By:</strong> {{ project.user_updated.username|default:"-" }}</p>
+        </div>
+    </div>
+</div>
+<div class="main-container">
+    <h2 class="mb-4" style="font-size:2rem; font-weight:700;">Datasets</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+        <button type="button" class="btn btn-add-project" data-bs-toggle="modal" data-bs-target="#datasetModal">
+            <span class="material-icons align-middle">cloud_upload</span> Upload Dataset
+        </button>
+        <div class="d-flex gap-3 mt-2 mt-md-0">
+            <button class="model-btn{% if selected_model == 'cnn' %} selected{% endif %}" onclick="selectModel(this)" data-model="cnn">CNN</button>
+            <button class="model-btn{% if selected_model == 'rf' %} selected{% endif %}" onclick="selectModel(this)" data-model="rf">Random Forest</button>
+            <button class="model-btn{% if selected_model == 'svm' %} selected{% endif %}" onclick="selectModel(this)" data-model="svm">SVM</button>
+            <button class="btn-model btn-primary" onclick="processDatasets()">
+                Process <span class="material-icons align-middle">arrow_forward</span>
+            </button>
+        </div>
+    </div>
+    <div class="modal fade" id="datasetModal" tabindex="-1" aria-labelledby="datasetModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 18px;">
+                <div class="modal-header" style="background: #23262b; color: #fff; border-top-left-radius: 18px; border-top-right-radius: 18px;">
+                    <h5 class="modal-title" id="datasetModalLabel">
+                        <span class="material-icons align-middle" style="font-size: 1.6rem; vertical-align: middle;">cloud_upload</span>
+                        Upload Dataset
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="modal-body" style="background: #f1f5f8e7;">
+                    {% include "prospectivity/partials/dataset_modal_form.html" %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="dataset-list">
+        {% include "prospectivity/partials/upload_form.html" %}
+    </div>
+    <div id="prediction-results" class="mt-4">
+        {% if heatmap_url %}
+            <div class="heatmap-container">
+                <h1>Prediction Result</h1>
+                <img src="{{ heatmap_url }}" alt="Prediction Heatmap" style="max-width: 100%; height: auto;">
+            </div>
+        {% endif %}
+        <div class="button-container mt-3">
+            {% if csv_url %}
+                <a href="{% url 'download_predictions_csv' project_id=project.id %}" class="btn btn-primary me-2">
+                    Download Predictions CSV
+                </a>
+            {% endif %}
+            {% if world_map_url %}
+                <a href="{{ world_map_url }}" target="_blank" class="btn btn-primary">
+                    View World Map with Heatmap
+                </a>
+            {% endif %}
+        </div>
+    </div>
+    <div id="process-loading" style="display:none; text-align:center; margin-bottom:1rem;">
+        <div class="custom-loading-bar-container">
+            <div class="custom-loading-bar"></div>
+        </div>
+        <div style="color:#fff; font-weight:600; margin-top:0.5rem; letter-spacing:1px;">Processing, please wait...</div>
+    </div>
+</div>
+
+<script>
+function selectModel(btn) {
+    document.querySelectorAll('.model-btn').forEach(function(b) {
+        b.classList.remove('selected');
+    });
+    btn.classList.add('selected');
+}
+
+function processDatasets() {
+    const selectedModel = document.querySelector('.model-btn.selected')?.dataset.model;
+    if (!selectedModel) {
+        alert('Please select a model (CNN, Random Forest, or SVM).');
+        return;
+    }
+    if (selectedModel !== 'cnn') {
+        alert('Only CNN model is supported for prediction at this time.');
+        return;
+    }
+
+    // Show loading spinner/bar
+    document.getElementById('process-loading').style.display = 'block';
+
+    const formData = new FormData();
+    formData.append('model', selectedModel);
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+    fetch("{% url 'select_and_predict_datasets' project_id=project.id %}", {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Hide loading spinner/bar
+        document.getElementById('process-loading').style.display = 'none';
+
+        if (data.status === 'success') {
+            const resultsDiv = document.getElementById('prediction-results');
+            resultsDiv.innerHTML = `
+                <div class="heatmap-container">
+                    <h3>Prediction Heatmap</h3>
+                    <img src="${data.heatmap_url}" alt="Prediction Heatmap" style="max-width: 100%; height: auto;">
+                </div>
+                <div class="button-container mt-3">
+                    <a href="{% url 'download_predictions_csv' project_id=project.id %}" class="btn btn-primary me-2">
+                        Download Predictions CSV
+                    </a>
+                    <a href="${data.world_map_url}" target="_blank" class="btn btn-primary">
+                        View World Map with Heatmap
+                    </a>
+                </div>
+            `;
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        // Hide loading spinner/bar
+        document.getElementById('process-loading').style.display = 'none';
+        console.error('Error:', error);
+        alert('An error occurred during processing.');
+    });
+}
+
+document.body.addEventListener('htmx:afterSwap', function(evt) {
+    if (evt.detail.target.id === "dataset-list") {
+        var modal = bootstrap.Modal.getInstance(document.getElementById('datasetModal'));
+        if (modal) {
+            modal.hide();
+        }
+        document.querySelector('#datasetModal form').reset();
+    }
+});
+
+document.body.addEventListener('htmx:afterRequest', function(evt) {
+    if (evt.detail.xhr.status >= 400 && evt.detail.target.id === "dataset-list") {
+        evt.detail.xhr.responseText.json().then(data => {
+            let errorMsg = data.error || 'Unknown error';
+            if (data.details) {
+                errorMsg += '\nDetails: ' + JSON.stringify(JSON.parse(data.details), null, 2);
+            }
+            alert('Upload failed: ' + errorMsg);
+        }).catch(() => {
+            alert('Upload failed: Unable to parse error response.');
+        });
+    }
+});
+</script>
+{% endblock %}
+{% block footer %}
+<footer class="footer mt-5 py-3" style="background: #181b1f; color: #bbb; text-align: center; border-top: 1px solid #23262b;">
+    <div class="container">
+        <span>© {{ now|date:"Y" }} CopperCore AI — All rights reserved.</span>
+    </div>
+</footer>
+{% endblock %}

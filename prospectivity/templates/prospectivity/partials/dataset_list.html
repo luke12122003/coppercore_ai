@@ -1,0 +1,43 @@
+{% load custom_filters %}
+
+<div id="dataset-list">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>-Dataset Name</th>
+                <th>Dataset Type</th>
+                <th>FILE</th>
+                <th>CRS</th>
+                <th>Band Info</th>
+                <th>Date Uploaded</th>
+                <th>Size</th>
+                <th>Anomaly Reports</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for dataset in datasets %}
+            <tr>
+                <td>{{ dataset.dataset_names }}</td>
+                <td>{{ dataset.dataset_types }}</td>
+                <td>
+                    {% if dataset.file %}
+                    <a href="{{ dataset.file.url }}" target="_blank">{{ dataset.file.name|basename }}</a>
+                    {% else %}
+                        No file uploaded
+                    {% endif %}
+                </td>
+                <td>{{ dataset.crs }}</td>
+                <td>{{ dataset.band_info }}</td>
+                <td>{{ dataset.updated_on}}</td>
+                <td>{{ dataset.file.size|filesizeformat|default:"N/A" }}</td>
+                <td>{{ dataset.dataset.geometry_types}}</td>
+                <td><a href="#">View Report</a></td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8">No datasets available.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

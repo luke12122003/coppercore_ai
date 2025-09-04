@@ -1,0 +1,26 @@
+<xaiArtifact artifact_id="da15a7d8-6297-47da-a8c4-e1cb03c89996" artifact_version_id="3f572b00-5454-4898-bf52-e341838c5665" title="prospectivity/map.html" contentType="text/html">
+{% extends 'prospectivity/base.html' %}
+{% block title %}Map - CopperCore AI{% endblock %}
+
+{% block content %}
+<h2>Interactive Map of Queensland</h2>
+<div id="map" style="width: 100%; height: 500px;"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+<script>
+    var map = L.map('map').setView([-20.505, 142.9], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    map.on('click', function(e) {
+        alert("You clicked the map at " + e.latlng.toString());
+    });
+
+    var marker = L.marker([-20.505, 142.9]).addTo(map);
+</script>
+{% endblock %}
+

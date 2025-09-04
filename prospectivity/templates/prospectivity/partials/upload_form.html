@@ -1,0 +1,94 @@
+<div class="container" id="dataset-list">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Dataset Name</th>
+                <th>Dataset Type</th>
+                <th>File</th>
+                <th>CRS</th>
+                <th>Band Info</th>
+                <th>Date Uploaded</th>
+                <th>Size</th>
+                <th>Status</th>
+                <th>Task Message</th>
+                <th>Thumbnail</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if datasets %}
+                {% for dataset in datasets %}
+                    <tr>
+                        <td>{{ dataset.dataset_names }}</td>
+                        <td>{{ dataset.dataset_types }}</td>
+                        <td>{{ dataset.file.name }}</td>
+                        <td>{{ dataset.crs }}</td>
+                        <td>{{ dataset.band_info }}</td>
+                        <td>{{ dataset.updated_on }}</td>
+                        <td>{{ dataset.file.size|filesizeformat }}</td>
+                        <td id="status-{{ dataset.id }}">{{ dataset.status|default:"Raw" }}</td>
+                        <td id="message-{{ dataset.id }}">{{ dataset.task_message|default:"" }}</td>
+                        <td>
+                            {% if dataset.thumbnail %}
+                                <img src="{{ dataset.thumbnail.url }}" width="100" alt="Thumbnail">
+                            {% else %}
+                                No preview available
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button hx-post="{% url 'trigger_crs' dataset.id %}" 
+                                    hx-target="#status-{{ dataset.id }}" 
+                                    hx-swap="innerHTML"
+                                    class="btn btn-primary btn-sm">CRS Harmonize</button>
+                            {% if dataset.dataset_types == 'raster' %}
+                                <button hx-post="{% url 'trigger_resample' dataset.id %}" 
+                                        hx-target="#status-{{ dataset.id }}" 
+                                        hx-swap="innerHTML"
+                                        class="btn btn-secondary btn-sm">Resample</button>
+                            {% elif dataset.dataset_types == 'vector' %}
+                                <button hx-post="{% url 'trigger_proximity' dataset.id %}" 
+                                        hx-target="#status-{{ dataset.id }}" 
+                                        hx-swap="innerHTML"
+                                        class="btn btn-secondary btn-sm">Proximity</button>
+                            {% endif %}
+                            <form method="post" action="{% url 'dataset_delete' dataset.id %}" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this dataset?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm">
+                                    <span class="material-icons align-middle" style="font-size:16px;">delete</span> Delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="11">No datasets available.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<script src="https://unpkg.com/htmx.org@1.9.6"></script>
+<script>
+    // Globally set CSRF token for all HTMX POST requests
+    document.body.addEventListener('htmx:configRequest', (event) => {
+        event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
+    });
+
+    // Periodically check status and task message for all datasets
+    setInterval(() => {
+        document.querySelectorAll('[id^="status-"]').forEach(el => {
+            const datasetId = el.id.split('-')[1];
+            fetch(`/status/${datasetId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    // Update status column
+                    document.querySelector(`#status-${datasetId}`).innerHTML = data.status || 'Unknown';
+                    // Update task message column
+                    document.querySelector(`#message-${datasetId}`).innerHTML = data.task_message || '';
+                })
+                .catch(error => console.error('Error polling status:', error));
+        });
+    }, 5000);
+</script>
